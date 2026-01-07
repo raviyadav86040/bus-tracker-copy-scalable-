@@ -1,0 +1,375 @@
+/* 
+   HithoBus "Clean Mobile" Reference Theme
+   Light Mode | Card Based | Status Driven
+*/
+
+:root {
+    /* Colors matches Reference Image */
+    --primary-blue: #2563eb;
+    --primary-light: #eff6ff;
+
+    --bg-app: #f3f4f6;
+    --bg-card: #ffffff;
+
+    --text-dark: #1f2937;
+    --text-gray: #6b7280;
+    --text-blue: #2563eb;
+
+    --status-live-bg: #d1fae5;
+    --status-live-text: #059669;
+
+    --status-stop-bg: #dbeafe;
+    --status-stop-text: #1d4ed8;
+
+    --alert-red-bg: #fee2e2;
+    --alert-red-title: #991b1b;
+    --alert-red-text: #b91c1c;
+
+    --alert-warn-bg: #fef3c7;
+    --alert-warn-text: #d97706;
+
+    /* Spacing */
+    --card-radius: 16px;
+    --spacing-std: 16px;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background-color: var(--bg-app);
+    color: var(--text-dark);
+    height: 100vh;
+    overflow: hidden;
+}
+
+.app-container {
+    max-width: 480px;
+    margin: 0 auto;
+    background: var(--bg-app);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    position: relative;
+}
+
+/* --- 1. HEADER SECTION --- */
+.header-blue {
+    background: var(--bg-card);
+    /* White header in reference */
+    padding: var(--spacing-std);
+    padding-top: 40px;
+    /* Status bar space */
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.trip-title {
+    font-size: 14px;
+    color: var(--text-gray);
+    margin-bottom: 4px;
+}
+
+.trip-route {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--primary-blue);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.progress-section {
+    margin-top: 16px;
+}
+
+.progress-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--text-gray);
+    margin-bottom: 6px;
+}
+
+.progress-bar-bg {
+    height: 6px;
+    background: #e5e7eb;
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    background: var(--primary-blue);
+    width: 0%;
+    transition: width 0.5s ease;
+}
+
+/* --- 2. CARD COMPONENT --- */
+.card {
+    background: var(--bg-card);
+    border-radius: var(--card-radius);
+    padding: 16px;
+    margin: 12px 16px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+/* --- 3. STOP CARD (Blue Pin) --- */
+.stop-card-content {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.pin-icon-box {
+    width: 40px;
+    height: 40px;
+    background: var(--primary-light);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary-blue);
+    font-size: 20px;
+    flex-shrink: 0;
+}
+
+.stop-details {
+    flex: 1;
+}
+
+.stop-label {
+    font-size: 12px;
+    color: var(--text-gray);
+}
+
+.stop-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-dark);
+}
+
+.distance-badge {
+    text-align: right;
+}
+
+.dist-val {
+    font-size: 14px;
+    color: var(--primary-blue);
+    font-weight: 700;
+}
+
+.at-stop-badge {
+    margin-top: 4px;
+    display: inline-block;
+    background: var(--status-live-bg);
+    color: var(--status-live-text);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+/* --- 4. NO STOPS ALERT (Red) --- */
+.alert-card-red {
+    background: #fff5f5;
+    border: 1px solid #fee2e2;
+    border-left: 4px solid #ef4444;
+}
+
+.alert-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.alert-icon-red {
+    color: #ef4444;
+    font-size: 20px;
+}
+
+.alert-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-dark);
+}
+
+.alert-desc {
+    font-size: 12px;
+    color: var(--text-gray);
+    line-height: 1.4;
+}
+
+.badge-unavailable {
+    display: inline-block;
+    margin-top: 12px;
+    background: #fee2e2;
+    color: #b91c1c;
+    padding: 2px 8px;
+    font-size: 10px;
+    font-weight: 700;
+    border-radius: 4px;
+}
+
+/* --- 5. PROGRESS CARD (Grid) --- */
+.trip-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #f3f4f6;
+    margin-bottom: 16px;
+}
+
+.route-icon-box {
+    width: 32px;
+    height: 32px;
+    background: var(--primary-light);
+    color: var(--primary-blue);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.current-loc h4 {
+    font-size: 12px;
+    color: var(--text-gray);
+    font-weight: 400;
+}
+
+.current-loc span {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-dark);
+}
+
+.stat-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.stat-row {
+    margin-bottom: 12px;
+}
+
+.stat-label-icon {
+    font-size: 11px;
+    color: var(--text-gray);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 4px;
+}
+
+.stat-value {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--primary-blue);
+}
+
+.stat-value.dark {
+    color: var(--text-dark);
+}
+
+.bottom-status-row {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 12px;
+    border-top: 1px solid #f3f4f6;
+    padding-top: 12px;
+}
+
+.live-indicator {
+    color: var(--status-live-text);
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* --- 6. CONNECTION WARNING (Yellow) --- */
+.warn-strip {
+    background: var(--alert-warn-bg);
+    color: var(--alert-warn-text);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 8px 12px;
+    border-radius: 8px;
+    margin-top: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.warn-strip i {
+    font-size: 14px;
+}
+
+/* --- 7. TRACKING MODE (Footer) --- */
+.mode-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #f8fafc;
+    /* Slightly darker than card */
+}
+
+.mode-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.mode-icon {
+    color: var(--primary-blue);
+    font-size: 20px;
+}
+
+.mode-text h5 {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-dark);
+}
+
+.mode-text p {
+    font-size: 11px;
+    color: var(--text-gray);
+}
+
+.active-dot {
+    color: var(--status-live-text);
+    font-size: 10px;
+    font-weight: 700;
+}
+
+/* UTILS */
+.hidden {
+    display: none !important;
+}
+
+.text-right {
+    text-align: right;
+}
+
+/* SIMULATOR OVERRIDE */
+.sim-overlay {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    padding: 20px;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+    z-index: 100;
+}

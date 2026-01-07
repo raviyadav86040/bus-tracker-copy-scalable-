@@ -3,58 +3,34 @@
 // Step 1: Provide in-memory demo data and pure functions.
 // Step 2 (next commit): Wire into server/index.js routes and sockets.
 
-const { calculateETA, distanceKm } = require("../eta");
+// Helper: Distance in KM
+function distanceKm(lat1, lon1, lat2, lon2) {
+  const R = 6371; // Radius of the earth in km
+  const dLat = (lat2 - lat1) * (Math.PI / 180);
+  const dLon = (lon2 - lon1) * (Math.PI / 180);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+// Helper: Simple ETA
+function calculateETA(lat1, lon1, lat2, lon2, speedKmh) {
+  const dist = distanceKm(lat1, lon1, lat2, lon2);
+  if (speedKmh <= 0) return 0;
+  return (dist / speedKmh) * 60; // minutes
+}
+
+// const { calculateETA, distanceKm } = require("../eta"); // REMOVED
+
 
 // ---------------- Route Service ----------------
-const ROUTES = [
-  {
-    id: "R_UK_DEL",
-    name: "Haldwani → Anand Vihar",
-    stops: [
-      { id: "S1", name: "Haldwani Bus Stop", lat: 29.2183, lng: 79.5130 },
-      { id: "S2", name: "Rudrapur Bus Depot", lat: 28.9740, lng: 79.4050 },
-      { id: "S3", name: "Around Bilaspur via bypass", lat: 28.8850, lng: 79.2800 },
-      { id: "S4", name: "Outside Bilaspur", lat: 28.8800, lng: 79.2700 },
-      { id: "S5", name: "Arrived Rampur", lat: 28.8100, lng: 79.0250 },
-      { id: "S6", name: "Rampur Bus stand", lat: 28.8030, lng: 79.0250 },
-      { id: "S7", name: "Moradabad Bypass - Delhi Hi...", lat: 28.8350, lng: 78.7700 }, // Approx bypass
-      { id: "S8", name: "Teerthanker Mahaveer Unive...", lat: 28.8250, lng: 78.6600 },
-      { id: "S9", name: "Joya", lat: 28.8400, lng: 78.5000 },
-      { id: "S10", name: "Haldiram’s - Gajraula", lat: 28.8350, lng: 78.2350 },
-      { id: "S11", name: "Garh Ganga", lat: 28.8000, lng: 78.1000 },
-      { id: "S12", name: "Gharmuktesar", lat: 28.7800, lng: 78.0500 },
-      { id: "S13", name: "Hapur Bypass", lat: 28.7100, lng: 77.7800 },
-      { id: "S14", name: "New Bus Stand, Pilkhuwa", lat: 28.7050, lng: 77.6550 },
-      { id: "S15", name: "Dasna", lat: 28.6750, lng: 77.5250 },
-      { id: "S16", name: "Delhi - Moradabad - kashipur...", lat: 28.6600, lng: 77.4500 }, // Approx highway segment
-      { id: "S17", name: "JAYPEE INSTITUTE OF INFO...", lat: 28.6300, lng: 77.3700 }, // Noida/border area approx
-      { id: "S18", name: "ISBT Anand Vihar", lat: 28.6469, lng: 77.3160 },
-      { id: "S19", name: "Point 22", lat: 28.6450, lng: 77.3150 } // Just a bit further to finish
-    ],
-    // Simplified polyline following the general path
-    polyline: [
-      { lat: 29.2183, lng: 79.5130 }, // Haldwani
-      { lat: 28.9740, lng: 79.4050 }, // Rudrapur
-      { lat: 28.8850, lng: 79.2800 }, // Bilaspur Area
-      { lat: 28.8030, lng: 79.0250 }, // Rampur
-      { lat: 28.8386, lng: 78.7733 }, // Moradabad Bypass
-      { lat: 28.8350, lng: 78.2350 }, // Gajraula
-      { lat: 28.7800, lng: 78.0500 }, // Gharmuktesar
-      { lat: 28.7306, lng: 77.7759 }, // Hapur
-      { lat: 28.7050, lng: 77.6550 }, // Pilkhuwa
-      { lat: 28.6750, lng: 77.5250 }, // Dasna
-      { lat: 28.6469, lng: 77.3160 }  // Anand Vihar
-    ]
-  }
-];
-
-// Single bus assignment
-const BUS_ROUTE = {
-  BUS_UK04: "R_UK_DEL"
-};
-
-function listRoutes() { return ROUTES.map(({ id, name, stops, polyline }) => ({ id, name, stops, polyline })); }
-function getRoute(routeId) { return ROUTES.find(r => r.id === routeId) || null; }
+// ---------------- Route Service ----------------
+// Routes are now fetched from MongoDB in index.js
+// This file provides pure geometric/helper functions only.
+// ROUTES removed to prevent hardcoding.
 
 function findNearestStop(route, lat, lng) {
   return route.stops
@@ -62,29 +38,35 @@ function findNearestStop(route, lat, lng) {
     .sort((a, b) => a.d - b.d)[0]?.s || null;
 }
 
-function projectAlongPolyline(polyline, point) {
+function projectAlongPolyline(polyline, point, hintIndex = -1) {
   let best = {
     lat: polyline[0].lat,
     lng: polyline[0].lng,
     distanceFromStartKm: 0,
     totalKm: 0,
-    minDist: Infinity
+    minDist: Infinity,
+    index: 0
   };
 
-  let travelled = 0;
-  let total = 0;
-
-  // compute total length
+  // 1. Calculate cumulative distances (Cache this in production!)
+  // For now, we compute it. In a real highly-scaled app, Route object should have this pre-calculated.
+  const cumDist = [0];
   for (let i = 1; i < polyline.length; i++) {
-    total += distanceKm(
-      polyline[i - 1].lat,
-      polyline[i - 1].lng,
-      polyline[i].lat,
-      polyline[i].lng
-    );
+    cumDist[i] = cumDist[i - 1] + distanceKm(polyline[i - 1].lat, polyline[i - 1].lng, polyline[i].lat, polyline[i].lng);
+  }
+  const totalLength = cumDist[cumDist.length - 1];
+
+  // Optimization: Search Window
+  let startIndex = 0;
+  let endIndex = polyline.length - 1;
+
+  // If hint provided, look ahead 50 points, look back 5 points
+  if (hintIndex !== -1 && hintIndex < polyline.length) {
+    startIndex = Math.max(0, hintIndex - 5);
+    endIndex = Math.min(polyline.length - 1, hintIndex + 50);
   }
 
-  for (let i = 0; i < polyline.length - 1; i++) {
+  function checkSegment(i) {
     const a = polyline[i];
     const b = polyline[i + 1];
 
@@ -106,16 +88,36 @@ function projectAlongPolyline(polyline, point) {
     const d = distanceKm(px, py, projLat, projLng);
 
     if (d < best.minDist) {
+      // Precise distance from start: Distance to A + Distance from A to Proj
+      const distToA = cumDist[i];
+      const distAToProj = distanceKm(ax, ay, projLat, projLng);
+
       best = {
         lat: projLat,
         lng: projLng,
-        distanceFromStartKm: travelled + distanceKm(ax, ay, projLat, projLng),
-        totalKm: total,
-        minDist: d
+        distanceFromStartKm: distToA + distAToProj,
+        totalKm: totalLength,
+        minDist: d,
+        index: i
       };
     }
+  }
 
-    travelled += distanceKm(ax, ay, bx, by);
+  // 1. Try Window Search
+  for (let i = startIndex; i < endIndex; i++) {
+    checkSegment(i);
+  }
+
+  // 2. Fallback: If the best match in window is > 200m away, maybe we jumped?
+  // Or if we didn't have a hint.
+  if (best.minDist > 0.2 && hintIndex !== -1) {
+    // console.log("⚠️ Off-route or jump detected. Doing full search.");
+    // Search the rest (excluding what we already checked to save CPU?)
+    // For simplicity, just search everything else.
+    for (let i = 0; i < polyline.length - 1; i++) {
+      if (i >= startIndex && i < endIndex) continue; // Skip already checked
+      checkSegment(i);
+    }
   }
 
   return best;
@@ -141,6 +143,8 @@ function etaToPointMinutes(from, to, speedKmh = 25) {
 }
 
 function etaAlongRouteMinutes(route, busPoint, stopPoint, speedKmh = 25) {
+  // Optimization: We could pass hints here too if we tracked stop indices, 
+  // but for now full search is okay for occasional ETA re-calc.
   const busProj = projectAlongPolyline(route.polyline, busPoint);
   const stopProj = projectAlongPolyline(route.polyline, stopPoint);
 
@@ -242,11 +246,12 @@ function labelFor(b) {
 
 module.exports = {
   // data
-  ROUTES,
-  BUS_ROUTE,
+  // data
+
+
   // route helpers
-  listRoutes,
-  getRoute,
+
+
   findNearestStop,
   projectAlongPolyline,
   // tracking helpers
