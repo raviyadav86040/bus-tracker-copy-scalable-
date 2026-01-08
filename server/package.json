@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "start": "node index.js",
+    "start": "node server/index.js",
     "dev": "NODE_ENV=development node index.js",
     "simulate": "node simulate_journey.js"
   },
